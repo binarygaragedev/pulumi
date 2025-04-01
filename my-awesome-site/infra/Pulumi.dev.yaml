@@ -1,0 +1,3 @@
+config:
+  gcp:project: pulumi-455519
+  my-awesome-site-infra:projectName: my-awesome-site

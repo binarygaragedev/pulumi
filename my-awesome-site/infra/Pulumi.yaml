@@ -1,0 +1,10 @@
+name: my-awesome-site-infra
+description: Infrastructure for my static site
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: gcp-typescript

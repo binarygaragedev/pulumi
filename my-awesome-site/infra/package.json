@@ -1,0 +1,14 @@
+{
+    "name": "my-awesome-site-infra",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/gcp": "^8.0.0",
+        "@pulumi/pulumi": "^3.113.0",
+        "@types/mime": "^3.0.4",
+        "mime": "^4.0.6"
+    }
+}
