@@ -1,48 +1,38 @@
-// Create this as upload.ts in the infra directory
-import * as pulumi from "@pulumi/pulumi";
-import * as gcp from "@pulumi/gcp";
 import * as fs from "fs";
 import * as path from "path";
-import * as mime from "mime";
+import { execSync } from "child_process";
 
-// Get outputs from the main stack
-const stack = new pulumi.StackReference(`${pulumi.getOrganization()}/${pulumi.getProject}/${pulumi.getStack()}`);
-const bucketName = stack.getOutput("websiteBucket");
+// Get the bucket name from command line argument or environment variable
+const bucketName = process.env.BUCKET_NAME;
 
-// Function to upload files recursively
-async function uploadDirectory(bucketName: string, directoryPath: string, prefix: string = "") {
-  const files = fs.readdirSync(directoryPath);
-
-  for (const file of files) {
-    const filePath = path.join(directoryPath, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      await uploadDirectory(bucketName, filePath, path.join(prefix, file));
-    } else {
-      const objectName = path.join(prefix, file);
-      const contentType = "application/octet-stream";
-
-      new gcp.storage.BucketObject(objectName, {
-        bucket: bucketName,
-        source: new pulumi.asset.FileAsset(filePath),
-        name: objectName,
-        contentType: contentType,
-        cacheControl: "public, max-age=3600", // 1 hour cache
-      });
-
-      console.log(`Uploaded: ${objectName}`);
-    }
-  }
+if (!bucketName) {
+  console.error("Error: Bucket name not provided");
+  console.error("Usage: npx ts-node simple-upload.ts <bucket-name>");
+  console.error("Or set the BUCKET_NAME environment variable");
+  process.exit(1);
 }
 
-// Path to the Next.js static export directory (relative to this script)
-const staticSitePath = "../out";
+// Path to the Next.js static export directory
+const staticSitePath = path.resolve(__dirname, "../out");
 
-// Upload the static site to the bucket
-bucketName.apply(async (name) => {
-  if (name) {
-    console.log(`Uploading static site to bucket: ${name}`);
-    await uploadDirectory(name, staticSitePath);
-  }
-});
+// Check if the directory exists
+if (!fs.existsSync(staticSitePath)) {
+  console.error(`Error: Directory not found: ${staticSitePath}`);
+  console.error("Make sure you've built your Next.js project with 'npm run build'");
+  process.exit(1);
+}
+
+// Upload files using gsutil
+try {
+  console.log(`Uploading files from ${staticSitePath} to gs://${bucketName}/`);
+  
+  // Use execSync to run the gsutil command
+  execSync(`gsutil -m cp -r "${staticSitePath}/*" gs://${bucketName}/`, {
+    stdio: 'inherit' // This shows the command output in the console
+  });
+  
+  console.log("Upload completed successfully!");
+} catch (error) {
+  console.error("Error uploading files:", error);
+  process.exit(1);
+}

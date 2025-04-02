@@ -4,11 +4,10 @@ import * as gcp from "@pulumi/gcp";
 // Get configuration
 const config = new pulumi.Config();
 const projectName = config.require("projectName") || "my-awesome-site";
-// const organizationName = config.require("organization") || "binarygaragedev";
 const stackName = pulumi.getStack();
 
 // Create a unique storage bucket name
-const bucketName = `${projectName}-${Date.now()}`;
+const bucketName = `${projectName}-${stackName}-${Date.now()}`;
 
 // Create a storage bucket for our static website
 const bucket = new gcp.storage.Bucket(bucketName, {
@@ -80,4 +79,4 @@ const httpForwardingRule = new gcp.compute.GlobalForwardingRule("http-forwarding
 // Export the bucket name and website URL
 export const websiteBucket = bucket.name;
 export const websiteUrl = pulumi.interpolate`https://${staticIp.address}`;
-export const bucketWebsiteUrl = pulumi.interpolate`http://${bucket.name}.storage.googleapis.com`;
+export const bucketWebsiteUrl = pulumi.interpolate`https://storage.googleapis.com/${bucket.name}`;

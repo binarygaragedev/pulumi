@@ -1,5 +1,5 @@
 name: my-awesome-site-infra
-description: Infrastructure for my static site
+description: A minimal Google Cloud TypeScript Pulumi program
 runtime:
   name: nodejs
   options:
